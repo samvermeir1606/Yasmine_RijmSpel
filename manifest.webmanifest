@@ -1,0 +1,17 @@
+{
+  "name": "Speelplein van de klas",
+  "short_name": "Speelplein",
+  "lang": "nl",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#fff0b8",
+  "theme_color": "#ffcf5a",
+  "icons": [
+    {
+      "src": "assets/icons/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

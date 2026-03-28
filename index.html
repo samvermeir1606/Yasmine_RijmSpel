@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffcf5a">
+  <title>Speelplein van de klas</title>
+  <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <button class="icon-button fullscreen-button" id="fullscreen-button" type="button" aria-label="Volledig scherm">
+      <svg viewBox="0 0 24 24" aria-hidden="true" class="toolbar-icon fullscreen-icon fullscreen-icon--enter">
+        <path d="M9 4H4v5" />
+        <path d="M15 4h5v5" />
+        <path d="M4 15v5h5" />
+        <path d="M20 15v5h-5" />
+      </svg>
+      <svg viewBox="0 0 24 24" aria-hidden="true" class="toolbar-icon fullscreen-icon fullscreen-icon--exit hidden">
+        <path d="M10 4H4v6" />
+        <path d="M14 4h6v6" />
+        <path d="M4 14v6h6" />
+        <path d="M20 14v6h-6" />
+      </svg>
+    </button>
+
+    <main class="page-stack">
+      <section class="page page-active" id="page-home" aria-label="Startscherm">
+        <div class="game-grid">
+          <button class="game-button game-button--ei" type="button" data-open-game="ei" aria-label="Rijmen op ei">
+            <span class="game-button__title">Rijmen op ei</span>
+          </button>
+
+          <button class="game-button game-button--kleur" type="button" data-open-game="kleur" aria-label="Zoek een rijmpaar">
+            <span class="game-button__title">Zoek een rijmpaar</span>
+          </button>
+
+          <button class="game-button game-button--vorm" type="button" data-open-game="vorm" aria-label="Vormenspel">
+            <span class="game-button__title">Rijm memory</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="page" id="page-ei" aria-label="Minigame rijmen op ei">
+        <div class="toolbar">
+          <button class="icon-button" id="home-link" type="button" aria-label="Terug naar het startscherm">
+            <svg viewBox="0 0 24 24" aria-hidden="true" class="toolbar-icon">
+              <path d="M14.5 5.5 8 12l6.5 6.5" />
+            </svg>
+          </button>
+          <button class="icon-button" type="button" data-action="reset-ei" aria-label="Opnieuw starten">
+            <svg viewBox="0 0 24 24" aria-hidden="true" class="toolbar-icon">
+              <path d="M18 8a7 7 0 1 0 1.2 6.2" />
+              <path d="M18 4v5h-5" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="ei-layout">
+          <aside class="result-panel result-panel--correct">
+            <h3>Rijmt op ei</h3>
+            <div class="result-list" id="correct-list" aria-live="polite"></div>
+          </aside>
+
+          <section class="play-area">
+            <div class="drop-zone" id="drop-zone" aria-label="Sleep hierheen">
+              <div class="drop-zone__halo"></div>
+              <div class="egg-card">
+                <img src="assets/minigames/ei/center/ei.png" alt="Ei" class="main-object" id="egg-image">
+                <div class="image-fallback">ei</div>
+              </div>
+            </div>
+            <div class="scatter-area" id="scatter-area" aria-label="Speelveld"></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="page" id="page-kleur" aria-labelledby="kleur-title">
+        <div class="toolbar">
+          <button class="icon-button" type="button" data-action="back-home" aria-label="Terug naar het startscherm">
+            <svg viewBox="0 0 24 24" aria-hidden="true" class="toolbar-icon">
+              <path d="M14.5 5.5 8 12l6.5 6.5" />
+            </svg>
+          </button>
+          <button class="icon-button" type="button" data-action="reset-kleur" aria-label="Opnieuw starten">
+            <svg viewBox="0 0 24 24" aria-hidden="true" class="toolbar-icon">
+              <path d="M18 8a7 7 0 1 0 1.2 6.2" />
+              <path d="M18 4v5h-5" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="pair-layout">
+          <section class="pair-play-area">
+            <div class="pair-grid" id="pair-grid" aria-label="Kaartjes om te koppelen"></div>
+          </section>
+
+          <aside class="result-panel result-panel--correct">
+            <h3 id="kleur-title">Rijmparen</h3>
+            <div class="pair-result-list" id="pair-result-list" aria-live="polite"></div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="page" id="page-vorm" aria-labelledby="vorm-title">
+        <div class="toolbar">
+          <button class="icon-button" type="button" data-action="back-home" aria-label="Terug naar het startscherm">
+            <svg viewBox="0 0 24 24" aria-hidden="true" class="toolbar-icon">
+              <path d="M14.5 5.5 8 12l6.5 6.5" />
+            </svg>
+          </button>
+          <button class="icon-button" type="button" data-action="reset-vorm" aria-label="Opnieuw starten">
+            <svg viewBox="0 0 24 24" aria-hidden="true" class="toolbar-icon">
+              <path d="M18 8a7 7 0 1 0 1.2 6.2" />
+              <path d="M18 4v5h-5" />
+            </svg>
+          </button>
+        </div>
+
+        <section class="memory-play-area" aria-labelledby="vorm-title">
+          <h2 id="vorm-title" class="sr-only">Rijm memory</h2>
+          <div class="memory-grid" id="memory-grid" aria-label="Memory speelveld"></div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <div class="celebration-layer hidden" id="celebration-layer" aria-hidden="true"></div>
+  <div class="confetti-layer hidden" id="confetti-layer" aria-hidden="true"></div>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
