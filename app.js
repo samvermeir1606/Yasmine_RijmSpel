@@ -1,17 +1,33 @@
 const gameItemsEi = [
+  { id: "aardbei", label: "aardbei", rhymes: true, image: "assets/minigames/ei/items/aardbei.png", audio: "assets/audio/words/aardbei.mp3" },
+  { id: "batterij", label: "batterij", rhymes: true, image: "assets/minigames/ei/items/batterij.png", audio: "assets/audio/words/batterij.mp3" },
   { id: "bij", label: "bij", rhymes: true, image: "assets/minigames/ei/items/bij.png", audio: "assets/audio/words/bij.mp3" },
-  { id: "klei", label: "klei", rhymes: true, image: "assets/minigames/ei/items/klei.png", audio: "assets/audio/words/klei.mp3" },
-  { id: "mij", label: "mij", rhymes: true, image: "assets/minigames/ei/items/mij.png", audio: "assets/audio/words/mij.mp3" },
-  { id: "trui", label: "trui", rhymes: false, image: "assets/minigames/ei/items/trui.png", audio: "assets/audio/words/trui.mp3" },
-  { id: "boom", label: "boom", rhymes: false, image: "assets/minigames/ei/items/boom.png", audio: "assets/audio/words/boom.mp3" },
-  { id: "vis", label: "vis", rhymes: false, image: "assets/minigames/ei/items/vis.png", audio: "assets/audio/words/vis.mp3" },
-  { id: "muis", label: "muis", rhymes: false, image: "assets/minigames/ei/items/muis.png", audio: "assets/audio/words/muis.mp3" },
+  { id: "blij", label: "blij", rhymes: true, image: "assets/minigames/ei/items/blij.png", audio: "assets/audio/words/blij.mp3" },
+  { id: "prei", label: "prei", rhymes: true, image: "assets/minigames/ei/items/prei.png", audio: "assets/audio/words/prei.mp3" },
+  { id: "schilderij", label: "schilderij", rhymes: true, image: "assets/minigames/ei/items/schilderij.png", audio: "assets/audio/words/schilderij.mp3" },
+  { id: "nest", label: "nest", rhymes: false, image: "assets/minigames/ei/items/nest.png", audio: "assets/audio/words/nest.mp3" },
+  { id: "potlood", label: "potlood", rhymes: false, image: "assets/minigames/ei/items/potlood.png", audio: "assets/audio/words/potlood.mp3" },
+  { id: "schaap", label: "schaap", rhymes: false, image: "assets/minigames/ei/items/schaap.png", audio: "assets/audio/words/schaap.mp3" },
+  { id: "vlinder", label: "vlinder", rhymes: false, image: "assets/minigames/ei/items/vlinder.png", audio: "assets/audio/words/vlinder.mp3" },
+  { id: "kledij", label: "kledij", rhymes: true, image: "assets/minigames/ei/items/kledij.png", audio: "assets/audio/words/kledij.mp3" },
 ];
 
 const gameAudio = {
   success: "assets/audio/game/goed.mp3",
   wrong: "assets/audio/game/fout.mp3",
   win: "assets/audio/game/winnen.mp3",
+};
+
+const instructionAudio = {
+  ei: "assets/audio/instructions/ei.mp3",
+  kleur: "assets/audio/instructions/kleur.mp3",
+  vorm: "assets/audio/instructions/vorm.mp3",
+};
+
+const instructionText = {
+  ei: "Sleep de kaartjes die rijmen op ei naar het ei in het midden.",
+  kleur: "Zoek twee woorden die rijmen op elkaar. Tik eerst op een kaartje om het woord te horen.",
+  vorm: "Zoek de twee kaartjes die bij elkaar horen. Draai de kaartjes om en luister goed naar de woorden.",
 };
 
 const pairSets = [
@@ -37,6 +53,7 @@ const state = {
   celebrationTimeout: null,
   confettiTimeout: null,
   activeAudio: null,
+  activeSpeech: null,
   memoryTimer: null,
 };
 
@@ -52,6 +69,7 @@ const elements = {
   resetEiButton: document.querySelector('[data-action="reset-ei"]'),
   resetKleurButton: document.querySelector('[data-action="reset-kleur"]'),
   resetVormButton: document.querySelector('[data-action="reset-vorm"]'),
+  instructionButtons: [...document.querySelectorAll("[data-instruction-game]")],
   celebrationLayer: document.querySelector("#celebration-layer"),
   confettiLayer: document.querySelector("#confetti-layer"),
   pairGrid: document.querySelector("#pair-grid"),
@@ -130,8 +148,15 @@ function stopActiveAudio() {
   state.activeAudio = null;
 }
 
+function stopInstructionSpeech() {
+  if (!("speechSynthesis" in window)) return;
+  window.speechSynthesis.cancel();
+  state.activeSpeech = null;
+}
+
 function playAudioClip(src, fallback) {
   stopActiveAudio();
+  stopInstructionSpeech();
 
   const audio = new Audio(src);
   state.activeAudio = audio;
@@ -177,6 +202,33 @@ function playWinCue() {
   });
 }
 
+function playInstruction(gameId) {
+  playAudioClip(instructionAudio[gameId], () => {
+    if (!("speechSynthesis" in window)) {
+      playTone({ frequency: 480, duration: 0.14, type: "triangle", gain: 0.035 });
+      setTimeout(() => playTone({ frequency: 620, duration: 0.18, type: "triangle", gain: 0.03 }), 130);
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(instructionText[gameId] || "");
+    utterance.lang = "nl-BE";
+    utterance.rate = 0.92;
+    utterance.pitch = 1.02;
+    utterance.onend = () => {
+      if (state.activeSpeech === utterance) {
+        state.activeSpeech = null;
+      }
+    };
+    utterance.onerror = () => {
+      if (state.activeSpeech === utterance) {
+        state.activeSpeech = null;
+      }
+    };
+    state.activeSpeech = utterance;
+    window.speechSynthesis.speak(utterance);
+  });
+}
+
 function attachUiSounds() {
   const interactive = [...document.querySelectorAll("button")];
   interactive.forEach((element) => {
@@ -216,6 +268,7 @@ function openGame(gameId) {
   if (gameId === "vorm") {
     resetMemoryGame();
   }
+  playInstruction(gameId);
 }
 
 function createImageMarkup(item, className = "") {
@@ -226,17 +279,7 @@ function createImageMarkup(item, className = "") {
   image.src = item.image;
   image.alt = item.label;
   image.loading = "eager";
-  image.addEventListener("error", () => {
-    image.hidden = true;
-    fallback.hidden = false;
-  });
-
-  const fallback = document.createElement("div");
-  fallback.className = "result-thumb";
-  fallback.textContent = item.label;
-  fallback.hidden = true;
-
-  wrapper.append(image, fallback);
+  wrapper.append(image);
   return wrapper;
 }
 
@@ -251,6 +294,12 @@ function createPolaroidCard(item) {
 
   card.append(media, label);
   return card;
+}
+
+function buildEiRoundItems() {
+  const rhymingItems = shuffle(gameItemsEi.filter((item) => item.rhymes)).slice(0, 5);
+  const nonRhymingItems = shuffle(gameItemsEi.filter((item) => !item.rhymes)).slice(0, 3);
+  return shuffle([...rhymingItems, ...nonRhymingItems]);
 }
 
 function buildPairItems() {
@@ -287,13 +336,14 @@ function shuffle(items) {
 function resetEiGame() {
   clearCelebrations();
   stopActiveAudio();
-  state.eiItems = shuffle(gameItemsEi).map((item, index) => ({
+  state.eiItems = buildEiRoundItems().map((item, index) => ({
     ...item,
     state: "field",
     x: 0,
     y: 0,
     originX: 0,
     originY: 0,
+    width: 0,
     index,
   }));
 
@@ -327,81 +377,48 @@ function resetMemoryGame() {
 function layoutScatterItems() {
   const area = elements.scatterArea.getBoundingClientRect();
   const zone = elements.dropZone.getBoundingClientRect();
-  const itemWidth = clamp(area.width * 0.145, 128, 174);
-  const itemHeight = clamp(itemWidth * 1.08, 138, 188);
-  const gap = 22;
-  const leftStart = 18;
-  const leftEnd = Math.max(leftStart, zone.left - area.left - itemWidth - gap);
-  const rightStart = zone.right - area.left + gap;
-  const rightEnd = Math.max(rightStart, area.width - itemWidth - 14);
-  const rowCapacity = Math.max(1, Math.floor((area.height - 40) / (itemHeight + gap)));
+  const rowsPerSide = 2;
+  const columnsPerSide = 2;
+  const edgePadding = 18;
+  const gap = 14;
+  const availableLeftWidth = Math.max(0, zone.left - area.left - edgePadding - gap);
+  const availableRightWidth = Math.max(0, area.right - zone.right - edgePadding - gap);
+  const availableSideWidth = Math.max(96, Math.min(availableLeftWidth, availableRightWidth));
+  const widthByColumns = (availableSideWidth - gap * (columnsPerSide - 1)) / columnsPerSide;
+  const availableHeight = Math.max(200, area.height - edgePadding * 2 - gap * (rowsPerSide - 1));
+  const widthByRows = availableHeight / (rowsPerSide * 1.36);
+  const itemWidth = clamp(Math.min(widthByColumns, widthByRows), 104, 170);
+  const itemHeight = itemWidth * 1.36;
+  const sideGridWidth = columnsPerSide * itemWidth + gap * (columnsPerSide - 1);
+  const sideGridHeight = rowsPerSide * itemHeight + gap * (rowsPerSide - 1);
+  const startY = Math.max(edgePadding, Math.round((area.height - sideGridHeight) / 2));
+  const leftStartX = Math.max(edgePadding, Math.round(zone.left - area.left - sideGridWidth - gap));
+  const rightStartX = Math.min(
+    Math.round(zone.right - area.left + gap),
+    Math.round(area.width - sideGridWidth - edgePadding)
+  );
+  const leftItems = shuffle(state.eiItems.slice(0, 4));
+  const rightItems = shuffle(state.eiItems.slice(4, 8));
 
-  const leftItems = shuffle(state.eiItems.filter((_, index) => index % 2 === 0));
-  const rightItems = shuffle(state.eiItems.filter((_, index) => index % 2 !== 0));
-  const leftColumns = determineColumns(leftEnd - leftStart + itemWidth, itemWidth, gap, leftItems.length, rowCapacity);
-  const rightColumns = determineColumns(rightEnd - rightStart + itemWidth, itemWidth, gap, rightItems.length, rowCapacity);
-
-  const leftSlots = buildSideSlots({
-    sideStart: leftStart,
-    sideEnd: leftEnd,
-    itemWidth,
-    itemHeight,
-    areaHeight: area.height,
-    gap,
-    columnsWanted: leftColumns,
-  });
-  const rightSlots = buildSideSlots({
-    sideStart: rightStart,
-    sideEnd: rightEnd,
-    itemWidth,
-    itemHeight,
-    areaHeight: area.height,
-    gap,
-    columnsWanted: rightColumns,
-  });
-
-  leftItems.forEach((item) => {
-    const slot = leftSlots.pop() || rightSlots.pop();
-    if (!slot) return;
-    item.x = slot.x;
-    item.y = slot.y;
+  leftItems.forEach((item, index) => {
+    const row = Math.floor(index / columnsPerSide);
+    const column = index % columnsPerSide;
+    item.width = itemWidth;
+    item.x = Math.round(leftStartX + column * (itemWidth + gap));
+    item.y = Math.round(startY + row * (itemHeight + gap));
     item.originX = item.x;
     item.originY = item.y;
   });
 
-  rightItems.forEach((item) => {
-    const slot = rightSlots.pop() || leftSlots.pop();
-    if (!slot) return;
-    item.x = slot.x;
-    item.y = slot.y;
+  rightItems.forEach((item, index) => {
+    const row = Math.floor(index / columnsPerSide);
+    const column = index % columnsPerSide;
+    item.width = itemWidth;
+    item.x = Math.round(rightStartX + column * (itemWidth + gap));
+    item.y = Math.round(startY + row * (itemHeight + gap));
     item.originX = item.x;
     item.originY = item.y;
   });
-}
-
-function determineColumns(sideWidth, itemWidth, gap, itemCount, rowCapacity) {
-  const maxColumnsByWidth = Math.max(1, Math.floor((Math.max(sideWidth, itemWidth) + gap) / (itemWidth + gap)));
-  const neededColumns = Math.max(1, Math.ceil(itemCount / rowCapacity));
-  return Math.min(maxColumnsByWidth, neededColumns);
-}
-
-function buildSideSlots({ sideStart, sideEnd, itemWidth, itemHeight, areaHeight, gap, columnsWanted }) {
-  const slots = [];
-  const availableWidth = Math.max(itemWidth, sideEnd - sideStart + itemWidth);
-  const maxColumns = Math.max(1, Math.floor((availableWidth + gap) / (itemWidth + gap)));
-  const columns = clamp(columnsWanted, 1, maxColumns);
-  const xStep = columns === 1 ? 0 : (availableWidth - itemWidth) / Math.max(1, columns - 1);
-  const maxRows = Math.max(1, Math.floor((areaHeight - 32) / (itemHeight + gap)));
-
-  for (let row = 0; row < maxRows; row += 1) {
-    for (let col = 0; col < columns; col += 1) {
-      const x = clamp(sideStart + col * xStep, sideStart, sideEnd);
-      const y = clamp(20 + row * (itemHeight + gap), 18, areaHeight - itemHeight - 12);
-      slots.push({ x, y });
-    }
-  }
-
-  return shuffle(slots);
 }
 
 function clamp(value, min, max) {
@@ -417,6 +434,7 @@ function renderScatterItems() {
       const node = document.createElement("div");
       node.className = "draggable-item";
       node.dataset.id = item.id;
+      node.style.width = `${item.width}px`;
       node.style.transform = `translate(${item.x}px, ${item.y}px)`;
 
       node.append(createPolaroidCard(item));
@@ -701,7 +719,6 @@ function handleMemoryCardClick(itemId) {
 
   const matched = firstItem.pairKey === secondItem.pairKey;
   if (matched) {
-    playSuccessCue();
     const firstNode = elements.memoryGrid.querySelector(`[data-id="${firstItem.id}"]`);
     const secondNode = elements.memoryGrid.querySelector(`[data-id="${secondItem.id}"]`);
     if (firstNode && secondNode) {
@@ -712,6 +729,7 @@ function handleMemoryCardClick(itemId) {
     }
 
     state.memoryTimer = setTimeout(() => {
+      playSuccessCue();
       firstItem.matched = true;
       secondItem.matched = true;
       resetMemorySelection();
@@ -722,8 +740,8 @@ function handleMemoryCardClick(itemId) {
       }
     }, 3000);
   } else {
-    playWrongCue();
     state.memoryTimer = setTimeout(() => {
+      playWrongCue();
       firstItem.revealed = false;
       secondItem.revealed = false;
       resetMemorySelection();
@@ -865,6 +883,7 @@ function clearCelebrations() {
   clearTimeout(state.celebrationTimeout);
   clearTimeout(state.confettiTimeout);
   stopActiveAudio();
+  stopInstructionSpeech();
   elements.celebrationLayer.innerHTML = "";
   elements.confettiLayer.innerHTML = "";
   elements.celebrationLayer.classList.add("hidden");
@@ -884,6 +903,12 @@ function setupNavigation() {
   elements.backHomeButtons.forEach((button) => {
     button.addEventListener("click", () => {
       showPage("home");
+    });
+  });
+
+  elements.instructionButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      playInstruction(button.dataset.instructionGame);
     });
   });
 

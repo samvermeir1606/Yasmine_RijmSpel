@@ -77,6 +77,11 @@ button {
   place-items: center;
 }
 
+.icon-button[data-instruction-game] {
+  font-size: 2rem;
+  line-height: 1;
+}
+
 .toolbar-icon {
   width: 34px;
   height: 34px;
@@ -224,7 +229,7 @@ button {
 
 .ei-layout {
   display: grid;
-  grid-template-columns: minmax(240px, 0.85fr) minmax(0, 2.45fr);
+  grid-template-columns: minmax(320px, 1fr) minmax(0, 2.2fr);
   gap: 1rem;
   align-items: stretch;
 }
@@ -254,9 +259,9 @@ button {
 
 .result-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 174px));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.8rem;
-  justify-content: start;
+  justify-content: stretch;
 }
 
 .result-chip {
@@ -321,6 +326,7 @@ button {
 
 .pair-grid .polaroid-card {
   min-height: 186px;
+  aspect-ratio: 174 / 186;
 }
 
 .pair-result-list {
@@ -417,6 +423,7 @@ button {
 
 .memory-card__face--front .polaroid-card {
   min-height: 208px;
+  height: 100%;
 }
 
 .memory-card.is-gone {
@@ -456,19 +463,19 @@ button {
   height: 100%;
   display: grid;
   place-items: center;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.6);
+  border-radius: 0;
+  background: transparent;
 }
 
 .main-object {
-  width: 72%;
-  height: 72%;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
 }
 
 .image-fallback {
   position: absolute;
-  display: grid;
+  display: none;
   place-items: center;
   width: 68%;
   height: 68%;
@@ -491,7 +498,7 @@ button {
 
 .draggable-item {
   position: absolute;
-  width: clamp(128px, 13.5vw, 174px);
+  width: 132px;
   user-select: none;
   touch-action: none;
   cursor: grab;
@@ -503,15 +510,17 @@ button {
 }
 
 .polaroid-card {
-  min-height: clamp(134px, 15vw, 186px);
+  width: 100%;
+  min-height: 0;
+  aspect-ratio: 1 / 1.36;
   border-radius: 24px;
   padding: 0.35rem 0.35rem 0.45rem;
   background: #fffdfb;
   border: 1px solid rgba(255, 255, 255, 0.92);
   box-shadow: 0 16px 34px rgba(113, 133, 156, 0.18);
   display: grid;
-  grid-template-rows: 1fr auto;
-  gap: 0.22rem;
+  grid-template-rows: auto auto;
+  gap: 0.35rem;
   align-items: stretch;
   justify-items: center;
   text-align: center;
@@ -519,26 +528,20 @@ button {
 
 .polaroid-card__media {
   width: 100%;
-  min-height: 0;
+  aspect-ratio: 1 / 1;
   border-radius: 18px;
-  background: linear-gradient(180deg, #fffaf2, #fff4e4);
+  background: transparent;
   display: grid;
   place-items: center;
   overflow: hidden;
 }
 
-.polaroid-card img,
-.polaroid-card .result-thumb {
+.polaroid-card img {
   width: 100%;
   height: 100%;
-  min-height: clamp(92px, 10vw, 126px);
+  display: block;
+  padding: 0.35rem;
   object-fit: contain;
-}
-
-.polaroid-card .result-thumb {
-  border-radius: 18px;
-  font-size: clamp(1rem, 1.5vw, 1.2rem);
-  font-weight: 800;
 }
 
 .polaroid-card__label {

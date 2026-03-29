@@ -4,6 +4,9 @@ Verwachte structuur:
 - game/goed.mp3
 - game/fout.mp3
 - game/winnen.mp3
+- instructions/ei.mp3
+- instructions/kleur.mp3
+- instructions/vorm.mp3
 - words/bij.mp3
 - words/klei.mp3
 - words/mij.mp3
