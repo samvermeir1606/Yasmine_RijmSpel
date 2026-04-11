@@ -23,6 +23,7 @@ const state = {
   pairGamePairs: [],
   memoryGamePairs: [],
   activeRhymeTopic: null,
+  currentMemoryLevel: 0,
   eiItems: [],
   pairItems: [],
   matchedPairs: [],
@@ -60,6 +61,7 @@ const elements = {
   pairGrid: document.querySelector("#pair-grid"),
   pairResultList: document.querySelector("#pair-result-list"),
   memoryGrid: document.querySelector("#memory-grid"),
+  memoryLevelBadge: document.querySelector("#memory-level-badge"),
   fullscreenButton: document.querySelector("#fullscreen-button"),
   fullscreenEnterIcon: document.querySelector(".fullscreen-icon--enter"),
   fullscreenExitIcon: document.querySelector(".fullscreen-icon--exit"),
@@ -67,7 +69,11 @@ const elements = {
 
 const TOPIC_IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg"];
 const PAIR_GAME_PAIR_COUNT = 6;
-const MEMORY_GAME_PAIR_COUNT = 3;
+const MEMORY_LEVELS = [
+  { level: 1, pairCount: 3 },
+  { level: 2, pairCount: 5 },
+  { level: 3, pairCount: 7 },
+];
 
 function slugifyLabel(value) {
   return value
@@ -200,6 +206,15 @@ function pickPairGroups(items, count) {
   return shuffle([...grouped.values()])
     .filter((group) => group.length >= 2)
     .slice(0, count);
+}
+
+function getCurrentMemoryLevelConfig() {
+  return MEMORY_LEVELS[state.currentMemoryLevel] || MEMORY_LEVELS[0];
+}
+
+function updateMemoryLevelUi() {
+  const config = getCurrentMemoryLevelConfig();
+  elements.memoryLevelBadge.textContent = `Niveau ${config.level}`;
 }
 
 function pickRandomRhymeTopic() {
@@ -572,6 +587,8 @@ function resetMemoryGame() {
   state.memoryTimer = null;
   state.memoryLocked = false;
   state.memorySelection = [];
+  state.currentMemoryLevel = 0;
+  updateMemoryLevelUi();
   state.memoryItems = buildMemoryItems();
   renderMemoryGrid();
 }
@@ -677,6 +694,8 @@ function renderPairResults() {
 }
 
 function renderMemoryGrid() {
+  const config = getCurrentMemoryLevelConfig();
+  elements.memoryGrid.dataset.level = `${config.level}`;
   const currentIds = [...elements.memoryGrid.children].map((node) => node.dataset.id).join("|");
   const nextIds = state.memoryItems.map((item) => item.id).join("|");
 
@@ -870,7 +889,8 @@ function orderPair(firstItem, secondItem) {
 }
 
 function buildMemoryItems() {
-  const selectedPairs = pickPairGroups(state.memoryGamePairs, MEMORY_GAME_PAIR_COUNT);
+  const { pairCount } = getCurrentMemoryLevelConfig();
+  const selectedPairs = pickPairGroups(state.memoryGamePairs, pairCount);
   return shuffle(
     selectedPairs.flatMap((pairItems, pairIndex) =>
       pairItems.slice(0, 2).map((item, itemIndex) => ({
@@ -882,6 +902,27 @@ function buildMemoryItems() {
       }))
     )
   );
+}
+
+function advanceMemoryLevel() {
+  const nextLevel = state.currentMemoryLevel + 1;
+  playWinCue();
+  spawnConfetti();
+
+  if (nextLevel >= MEMORY_LEVELS.length) {
+    return;
+  }
+
+  state.memoryLocked = true;
+  state.memoryTimer = setTimeout(() => {
+    state.currentMemoryLevel = nextLevel;
+    updateMemoryLevelUi();
+    state.memoryItems = buildMemoryItems();
+    state.memorySelection = [];
+    state.memoryLocked = false;
+    state.memoryTimer = null;
+    renderMemoryGrid();
+  }, 1800);
 }
 
 function handleMemoryCardClick(itemId) {
@@ -926,8 +967,7 @@ function handleMemoryCardClick(itemId) {
       resetMemorySelection();
       renderMemoryGrid();
       if (state.memoryItems.every((entry) => entry.matched)) {
-        playWinCue();
-        spawnConfetti();
+        advanceMemoryLevel();
       }
     }, 3000);
   } else {
@@ -1152,6 +1192,7 @@ function setupResponsiveRelayout() {
 function init() {
   loadRhymeTopics();
   loadRhymePairs();
+  updateMemoryLevelUi();
   registerServiceWorker();
   setupAudioUnlock();
   attachUiSounds();
