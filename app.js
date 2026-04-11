@@ -50,6 +50,7 @@ const elements = {
   scatterArea: document.querySelector("#scatter-area"),
   dropZone: document.querySelector("#drop-zone"),
   playArea: document.querySelector(".play-area"),
+  centerCard: document.querySelector(".egg-card"),
   centerImage: document.querySelector("#center-image"),
   centerFallback: document.querySelector("#center-fallback"),
   resetEiButton: document.querySelector('[data-action="reset-ei"]'),
@@ -68,12 +69,13 @@ const elements = {
 };
 
 const TOPIC_IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg"];
-const PAIR_GAME_PAIR_COUNT = 6;
+const PAIR_GAME_PAIR_COUNT = 4;
 const MEMORY_LEVELS = [
   { level: 1, pairCount: 3 },
   { level: 2, pairCount: 5 },
   { level: 3, pairCount: 7 },
 ];
+const MEMORY_REVEAL_DELAY_MS = 1300;
 
 function slugifyLabel(value) {
   return value
@@ -233,6 +235,16 @@ function updateRhymeTopicUi() {
   elements.centerFallback.textContent = topic.centerLabel;
   setImageSourceWithFallback(elements.centerImage, topic.centerImageCandidates, () => {
     elements.centerImage.hidden = true;
+  });
+}
+
+function playCenterTopicAudio() {
+  const topic = state.activeRhymeTopic;
+  if (!topic) return;
+
+  playWordAudio({
+    label: topic.centerLabel,
+    audio: topic.centerAudio,
   });
 }
 
@@ -910,6 +922,12 @@ function advanceMemoryLevel() {
   spawnConfetti();
 
   if (nextLevel >= MEMORY_LEVELS.length) {
+    state.memoryLocked = true;
+    state.memoryTimer = setTimeout(() => {
+      showPage("home");
+      state.memoryLocked = false;
+      state.memoryTimer = null;
+    }, 1800);
     return;
   }
 
@@ -969,7 +987,7 @@ function handleMemoryCardClick(itemId) {
       if (state.memoryItems.every((entry) => entry.matched)) {
         advanceMemoryLevel();
       }
-    }, 3000);
+    }, MEMORY_REVEAL_DELAY_MS);
   } else {
     state.memoryTimer = setTimeout(() => {
       playWrongCue();
@@ -977,7 +995,7 @@ function handleMemoryCardClick(itemId) {
       secondItem.revealed = false;
       resetMemorySelection();
       renderMemoryGrid();
-    }, 3000);
+    }, MEMORY_REVEAL_DELAY_MS);
   }
 }
 
@@ -1147,6 +1165,7 @@ function setupNavigation() {
     resetEiGame();
     playInstruction("ei");
   });
+  elements.centerCard.addEventListener("click", playCenterTopicAudio);
   elements.resetKleurButton.addEventListener("click", resetPairGame);
   elements.resetVormButton.addEventListener("click", resetMemoryGame);
 }

@@ -484,6 +484,7 @@ button {
   transform: translate(-50%, -50%);
   display: grid;
   place-items: center;
+  z-index: 5;
 }
 
 .egg-card {
@@ -494,6 +495,7 @@ button {
   place-items: center;
   border-radius: 0;
   background: transparent;
+  cursor: pointer;
 }
 
 .main-object {
@@ -523,6 +525,7 @@ button {
 .scatter-area {
   position: absolute;
   inset: 0;
+  z-index: 1;
 }
 
 .draggable-item {
