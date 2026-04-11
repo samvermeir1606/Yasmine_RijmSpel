@@ -77,6 +77,11 @@ const MEMORY_LEVELS = [
 ];
 const MEMORY_REVEAL_DELAY_MS = 1300;
 
+function pickRandomItem(items) {
+  if (!items?.length) return null;
+  return items[Math.floor(Math.random() * items.length)];
+}
+
 function slugifyLabel(value) {
   return value
     .toLowerCase()
@@ -220,8 +225,7 @@ function updateMemoryLevelUi() {
 }
 
 function pickRandomRhymeTopic() {
-  if (!state.rhymeTopics.length) return null;
-  return state.rhymeTopics[Math.floor(Math.random() * state.rhymeTopics.length)];
+  return pickRandomItem(state.rhymeTopics);
 }
 
 function updateRhymeTopicUi() {
@@ -438,6 +442,17 @@ function playWinCue() {
     setTimeout(() => playTone({ frequency: 880, duration: 0.2, type: "triangle", gain: 0.045 }), 100);
     setTimeout(() => playTone({ frequency: 990, duration: 0.24, type: "triangle", gain: 0.04 }), 220);
   });
+}
+
+function playCelebrationCheer() {
+  const clip = pickRandomItem(window.CELEBRATION_AUDIO_DATA?.items || []);
+  if (!clip) {
+    return;
+  }
+
+  const src = `assets/audio/celebration/${clip}`;
+  const audio = new Audio(src);
+  audio.play().catch(() => {});
 }
 
 function playInstruction(gameId) {
@@ -1108,6 +1123,7 @@ function spawnConfetti() {
   const layer = elements.confettiLayer;
   layer.innerHTML = "";
   layer.classList.remove("hidden");
+  playCelebrationCheer();
 
   const colors = ["#ff8d5f", "#79d8b6", "#ffcf5a", "#7ac7ff", "#ffffff", "#ef6a47"];
   for (let index = 0; index < 170; index += 1) {

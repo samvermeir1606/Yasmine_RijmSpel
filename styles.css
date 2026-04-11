@@ -358,29 +358,34 @@ button {
 
 .pair-result-list {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.85rem;
   align-content: start;
 }
 
 .pair-result-card {
   display: grid;
-  grid-template-columns: 174px auto 174px;
-  gap: 0.55rem;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 0.4rem;
   align-items: center;
-  justify-content: center;
+  justify-items: stretch;
 }
 
 .pair-link {
   display: grid;
   place-items: center;
-  width: 42px;
-  height: 42px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.9);
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: 800;
   color: var(--mint-deep);
+}
+
+.pair-result-card .polaroid-card {
+  min-height: 0;
+  aspect-ratio: 130 / 150;
 }
 
 .memory-grid {
@@ -484,7 +489,7 @@ button {
   transform: translate(-50%, -50%);
   display: grid;
   place-items: center;
-  z-index: 5;
+  z-index: 2;
 }
 
 .egg-card {
@@ -525,12 +530,14 @@ button {
 .scatter-area {
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: 4;
+  pointer-events: none;
 }
 
 .draggable-item {
   position: absolute;
   width: 132px;
+  pointer-events: auto;
   user-select: none;
   touch-action: none;
   cursor: grab;
@@ -684,8 +691,12 @@ button {
     grid-template-columns: repeat(3, 174px);
   }
 
+  .pair-result-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .pair-result-card {
-    grid-template-columns: 174px auto 174px;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   }
 
   .memory-grid {
@@ -714,6 +725,10 @@ button {
   .pair-result-card {
     grid-template-columns: 174px;
     justify-items: center;
+  }
+
+  .pair-result-list {
+    grid-template-columns: 1fr;
   }
 
   .pair-link {

@@ -1,4 +1,4 @@
-const CACHE_NAME = "speelplein-v8";
+const CACHE_NAME = "speelplein-v9";
 const APP_ASSETS = [
   "./",
   "./index.html",
@@ -6,6 +6,7 @@ const APP_ASSETS = [
   "./app.js",
   "./manifest.webmanifest",
   "./assets/icons/favicon.svg",
+  "./assets/audio/celebration/index.js",
   "./assets/minigames/rijm/topics/index.js",
   "./assets/minigames/kleur/pairs/index.js",
   "./assets/minigames/vorm/pairs/index.js",
