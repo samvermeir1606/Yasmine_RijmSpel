@@ -29,8 +29,8 @@
     <main class="page-stack">
       <section class="page page-active" id="page-home" aria-label="Startscherm">
         <div class="game-grid">
-          <button class="game-button game-button--ei" type="button" data-open-game="ei" aria-label="Rijmen op ei">
-            <span class="game-button__title">Rijmen op ei</span>
+          <button class="game-button game-button--ei" type="button" data-open-game="ei" aria-label="Rijmwoordenspel">
+            <span class="game-button__title">Rijmwoordenspel</span>
           </button>
 
           <button class="game-button game-button--kleur" type="button" data-open-game="kleur" aria-label="Zoek een rijmpaar">
@@ -43,7 +43,7 @@
         </div>
       </section>
 
-      <section class="page" id="page-ei" aria-label="Minigame rijmen op ei">
+      <section class="page" id="page-ei" aria-label="Minigame rijmwoordenspel">
         <div class="toolbar">
           <button class="icon-button" id="home-link" type="button" aria-label="Terug naar het startscherm">
             <svg viewBox="0 0 24 24" aria-hidden="true" class="toolbar-icon">
@@ -61,16 +61,15 @@
 
         <div class="ei-layout">
           <aside class="result-panel result-panel--correct">
-            <h3>Rijmt op ei</h3>
+            <h3 id="rhyme-title">Rijmt op ei</h3>
             <div class="result-list" id="correct-list" aria-live="polite"></div>
           </aside>
 
           <section class="play-area">
             <div class="drop-zone" id="drop-zone" aria-label="Sleep hierheen">
-              <div class="drop-zone__halo"></div>
               <div class="egg-card">
-                <img src="assets/minigames/ei/center/ei.png" alt="Ei" class="main-object" id="egg-image">
-                <div class="image-fallback">ei</div>
+                <img src="assets/minigames/rijm/topics/ei/center - ei.png" alt="Ei" class="main-object" id="center-image">
+                <div class="image-fallback" id="center-fallback">ei</div>
               </div>
             </div>
             <div class="scatter-area" id="scatter-area" aria-label="Speelveld"></div>
@@ -133,6 +132,9 @@
   <div class="celebration-layer hidden" id="celebration-layer" aria-hidden="true"></div>
   <div class="confetti-layer hidden" id="confetti-layer" aria-hidden="true"></div>
 
+  <script src="assets/minigames/rijm/topics/index.js" defer></script>
+  <script src="assets/minigames/kleur/pairs/index.js" defer></script>
+  <script src="assets/minigames/vorm/pairs/index.js" defer></script>
   <script src="app.js" defer></script>
 </body>
 </html>

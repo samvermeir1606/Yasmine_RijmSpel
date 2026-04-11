@@ -1,0 +1,28 @@
+window.RHYME_PAIR_DATA = {
+  items: [
+    "schaap - aap",
+    "aap - schaap",
+    "wol - bol",
+    "bol - wol",
+    "wei - bij",
+    "bij - wei",
+    "geit - bijt",
+    "bijt - geit",
+    "peer - veer",
+    "veer - peer",
+    "boek - koek",
+    "koek - boek",
+    "mes - fles",
+    "fles - mes",
+    "hout - koud",
+    "koud - hout",
+    "koek - boek",
+    "boek - koek",
+    "jas - tas",
+    "tas - jas",
+    "schoen - zoen",
+    "zoen - schoen",
+    "kuiken - ruiken",
+    "ruiken - kuiken"
+  ],
+};

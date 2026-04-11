@@ -309,7 +309,7 @@ button {
 
 .pair-grid {
   display: grid;
-  grid-template-columns: repeat(2, 174px);
+  grid-template-columns: repeat(3, 174px);
   gap: 0.9rem;
   align-content: start;
   justify-content: center;
@@ -448,17 +448,8 @@ button {
   place-items: center;
 }
 
-.drop-zone__halo {
-  position: absolute;
-  inset: 8%;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.42);
-  border: 4px dashed rgba(215, 143, 127, 0.42);
-}
-
 .egg-card {
   position: relative;
-  z-index: 1;
   width: 100%;
   height: 100%;
   display: grid;
@@ -649,7 +640,7 @@ button {
   }
 
   .pair-grid {
-    grid-template-columns: repeat(2, 174px);
+    grid-template-columns: repeat(3, 174px);
   }
 
   .pair-result-card {
@@ -676,7 +667,7 @@ button {
   }
 
   .pair-grid {
-    grid-template-columns: 174px;
+    grid-template-columns: repeat(2, 174px);
   }
 
   .pair-result-card {

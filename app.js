@@ -1,17 +1,3 @@
-const gameItemsEi = [
-  { id: "aardbei", label: "aardbei", rhymes: true, image: "assets/minigames/ei/items/aardbei.png", audio: "assets/audio/words/aardbei.mp3" },
-  { id: "batterij", label: "batterij", rhymes: true, image: "assets/minigames/ei/items/batterij.png", audio: "assets/audio/words/batterij.mp3" },
-  { id: "bij", label: "bij", rhymes: true, image: "assets/minigames/ei/items/bij.png", audio: "assets/audio/words/bij.mp3" },
-  { id: "blij", label: "blij", rhymes: true, image: "assets/minigames/ei/items/blij.png", audio: "assets/audio/words/blij.mp3" },
-  { id: "prei", label: "prei", rhymes: true, image: "assets/minigames/ei/items/prei.png", audio: "assets/audio/words/prei.mp3" },
-  { id: "schilderij", label: "schilderij", rhymes: true, image: "assets/minigames/ei/items/schilderij.png", audio: "assets/audio/words/schilderij.mp3" },
-  { id: "nest", label: "nest", rhymes: false, image: "assets/minigames/ei/items/nest.png", audio: "assets/audio/words/nest.mp3" },
-  { id: "potlood", label: "potlood", rhymes: false, image: "assets/minigames/ei/items/potlood.png", audio: "assets/audio/words/potlood.mp3" },
-  { id: "schaap", label: "schaap", rhymes: false, image: "assets/minigames/ei/items/schaap.png", audio: "assets/audio/words/schaap.mp3" },
-  { id: "vlinder", label: "vlinder", rhymes: false, image: "assets/minigames/ei/items/vlinder.png", audio: "assets/audio/words/vlinder.mp3" },
-  { id: "kledij", label: "kledij", rhymes: true, image: "assets/minigames/ei/items/kledij.png", audio: "assets/audio/words/kledij.mp3" },
-];
-
 const gameAudio = {
   success: "assets/audio/game/goed.mp3",
   wrong: "assets/audio/game/fout.mp3",
@@ -19,6 +5,7 @@ const gameAudio = {
 };
 
 const instructionAudio = {
+  rhymeBase: "assets/audio/instructions/rijm-base.mp3",
   ei: "assets/audio/instructions/ei.mp3",
   kleur: "assets/audio/instructions/kleur.mp3",
   vorm: "assets/audio/instructions/vorm.mp3",
@@ -30,17 +17,12 @@ const instructionText = {
   vorm: "Zoek de twee kaartjes die bij elkaar horen. Draai de kaartjes om en luister goed naar de woorden.",
 };
 
-const pairSets = [
-  ["schaap", "aap"],
-  ["wol", "bol"],
-  ["wei", "bij"],
-  ["geit", "bijt"],
-  ["peer", "veer"],
-  ["boek", "koek"],
-];
-
 const state = {
   currentPage: "home",
+  rhymeTopics: [],
+  pairGamePairs: [],
+  memoryGamePairs: [],
+  activeRhymeTopic: null,
   eiItems: [],
   pairItems: [],
   matchedPairs: [],
@@ -63,9 +45,12 @@ const elements = {
   backHomeButtons: [...document.querySelectorAll('[data-action="back-home"]')],
   openButtons: [...document.querySelectorAll("[data-open-game]")],
   correctList: document.querySelector("#correct-list"),
+  rhymeTitle: document.querySelector("#rhyme-title"),
   scatterArea: document.querySelector("#scatter-area"),
   dropZone: document.querySelector("#drop-zone"),
   playArea: document.querySelector(".play-area"),
+  centerImage: document.querySelector("#center-image"),
+  centerFallback: document.querySelector("#center-fallback"),
   resetEiButton: document.querySelector('[data-action="reset-ei"]'),
   resetKleurButton: document.querySelector('[data-action="reset-kleur"]'),
   resetVormButton: document.querySelector('[data-action="reset-vorm"]'),
@@ -79,6 +64,189 @@ const elements = {
   fullscreenEnterIcon: document.querySelector(".fullscreen-icon--enter"),
   fullscreenExitIcon: document.querySelector(".fullscreen-icon--exit"),
 };
+
+const TOPIC_IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg"];
+const PAIR_GAME_PAIR_COUNT = 6;
+const MEMORY_GAME_PAIR_COUNT = 3;
+
+function slugifyLabel(value) {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function parseTopicItemBaseName(baseName) {
+  const normalized = baseName.trim();
+  const separator = normalized.lastIndexOf(" - ");
+  if (separator === -1) {
+    return { label: normalized, rhymes: false };
+  }
+
+  const label = normalized.slice(0, separator).trim();
+  const rhymeFlag = normalized.slice(separator + 3).trim().toLowerCase();
+  return {
+    label,
+    rhymes: rhymeFlag === "true",
+  };
+}
+
+function hasFileExtension(value) {
+  return /\.[a-z0-9]+$/i.test(value);
+}
+
+function buildImageCandidates(folder, fileName) {
+  if (hasFileExtension(fileName)) {
+    return [`${folder}/${fileName}`];
+  }
+
+  return TOPIC_IMAGE_EXTENSIONS.map((extension) => `${folder}/${fileName}${extension}`);
+}
+
+function setImageSourceWithFallback(image, candidates, onFinalError = () => {}) {
+  const queue = candidates.filter(Boolean);
+  if (!queue.length) {
+    onFinalError();
+    return;
+  }
+
+  let index = 0;
+  image.onerror = () => {
+    index += 1;
+    if (index >= queue.length) {
+      image.onerror = null;
+      onFinalError();
+      return;
+    }
+    image.src = queue[index];
+  };
+  image.src = queue[index];
+}
+
+function normalizeRhymeTopic(rawTopic) {
+  const folder = `assets/minigames/rijm/topics/${rawTopic.id}`;
+  const centerLabel = rawTopic.center?.label || rawTopic.centerLabel || rawTopic.id;
+  const centerImageName = rawTopic.center?.image || `center - ${centerLabel}`;
+  const centerAudioName = rawTopic.center?.audio || `center - ${centerLabel}.mp3`;
+
+  return {
+    id: rawTopic.id,
+    centerLabel,
+    title: rawTopic.title || `Rijmt op ${centerLabel}`,
+    centerImageCandidates: buildImageCandidates(folder, centerImageName),
+    centerAudio: `${folder}/${centerAudioName}`,
+    items: (rawTopic.items || []).map((entry, index) => {
+      const { label, rhymes } = parseTopicItemBaseName(entry);
+      return {
+        id: `${rawTopic.id}-${slugifyLabel(label)}-${index}`,
+        label,
+        rhymes,
+        imageCandidates: buildImageCandidates(folder, entry),
+        audio: `${folder}/${entry}.mp3`,
+      };
+    }),
+  };
+}
+
+function loadRhymeTopics() {
+  const rawTopics = window.RHYME_TOPICS_DATA?.topics || [];
+  state.rhymeTopics = rawTopics.map(normalizeRhymeTopic).filter((topic) => topic.items.length);
+}
+
+function normalizePairEntry(entry, index, folder) {
+  const parts = entry.split(" - ").map((part) => part.trim()).filter(Boolean);
+  if (parts.length < 2) {
+    return null;
+  }
+
+  const [label, partnerLabel] = parts;
+  const pairKey = [slugifyLabel(label), slugifyLabel(partnerLabel)].sort().join("|");
+
+  return {
+    id: `${pairKey}-${slugifyLabel(label)}-${index}`,
+    label,
+    partnerLabel,
+    pairKey,
+    imageCandidates: buildImageCandidates(folder, entry),
+    audio: `${folder}/${entry}.mp3`,
+  };
+}
+
+function loadRhymePairs() {
+  const pairGameItems = window.RHYME_PAIR_DATA?.items || [];
+  const memoryGameItems = window.MEMORY_PAIR_DATA?.items || [];
+
+  state.pairGamePairs = pairGameItems
+    .map((entry, index) => normalizePairEntry(entry, index, "assets/minigames/kleur/pairs"))
+    .filter(Boolean);
+
+  state.memoryGamePairs = memoryGameItems
+    .map((entry, index) => normalizePairEntry(entry, index, "assets/minigames/vorm/pairs"))
+    .filter(Boolean);
+}
+
+function pickPairGroups(items, count) {
+  const grouped = new Map();
+
+  items.forEach((item) => {
+    if (!grouped.has(item.pairKey)) {
+      grouped.set(item.pairKey, []);
+    }
+    grouped.get(item.pairKey).push(item);
+  });
+
+  return shuffle([...grouped.values()])
+    .filter((group) => group.length >= 2)
+    .slice(0, count);
+}
+
+function pickRandomRhymeTopic() {
+  if (!state.rhymeTopics.length) return null;
+  return state.rhymeTopics[Math.floor(Math.random() * state.rhymeTopics.length)];
+}
+
+function updateRhymeTopicUi() {
+  const topic = state.activeRhymeTopic;
+  if (!topic) return;
+
+  elements.rhymeTitle.textContent = topic.title;
+  elements.dropZone.setAttribute("aria-label", `Sleep hierheen voor ${topic.centerLabel}`);
+  elements.centerImage.alt = topic.centerLabel;
+  elements.centerImage.hidden = false;
+  elements.centerFallback.textContent = topic.centerLabel;
+  setImageSourceWithFallback(elements.centerImage, topic.centerImageCandidates, () => {
+    elements.centerImage.hidden = true;
+  });
+}
+
+function speakText(text) {
+  stopInstructionSpeech();
+
+  if (!("speechSynthesis" in window)) {
+    playTone({ frequency: 480, duration: 0.14, type: "triangle", gain: 0.035 });
+    setTimeout(() => playTone({ frequency: 620, duration: 0.18, type: "triangle", gain: 0.03 }), 130);
+    return;
+  }
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "nl-BE";
+  utterance.rate = 0.92;
+  utterance.pitch = 1.02;
+  utterance.onend = () => {
+    if (state.activeSpeech === utterance) {
+      state.activeSpeech = null;
+    }
+  };
+  utterance.onerror = () => {
+    if (state.activeSpeech === utterance) {
+      state.activeSpeech = null;
+    }
+  };
+  state.activeSpeech = utterance;
+  window.speechSynthesis.speak(utterance);
+}
 
 function registerServiceWorker() {
   if ("serviceWorker" in navigator) {
@@ -179,6 +347,49 @@ function playAudioClip(src, fallback) {
   });
 }
 
+function playAudioSequence(sources, fallback) {
+  stopActiveAudio();
+  stopInstructionSpeech();
+
+  const queue = sources.filter(Boolean);
+  if (!queue.length) {
+    fallback();
+    return;
+  }
+
+  const playNext = (index) => {
+    if (index >= queue.length) {
+      state.activeAudio = null;
+      return;
+    }
+
+    const audio = new Audio(queue[index]);
+    state.activeAudio = audio;
+
+    audio.addEventListener("ended", () => {
+      if (state.activeAudio === audio) {
+        playNext(index + 1);
+      }
+    }, { once: true });
+
+    audio.addEventListener("error", () => {
+      if (state.activeAudio === audio) {
+        state.activeAudio = null;
+      }
+      fallback();
+    }, { once: true });
+
+    audio.play().catch(() => {
+      if (state.activeAudio === audio) {
+        state.activeAudio = null;
+      }
+      fallback();
+    });
+  };
+
+  playNext(0);
+}
+
 function playWordAudio(item) {
   playAudioClip(item.audio, () => {
     playTone({ frequency: 420, duration: 0.12, type: "triangle", gain: 0.035 });
@@ -203,29 +414,16 @@ function playWinCue() {
 }
 
 function playInstruction(gameId) {
-  playAudioClip(instructionAudio[gameId], () => {
-    if (!("speechSynthesis" in window)) {
-      playTone({ frequency: 480, duration: 0.14, type: "triangle", gain: 0.035 });
-      setTimeout(() => playTone({ frequency: 620, duration: 0.18, type: "triangle", gain: 0.03 }), 130);
-      return;
-    }
+  if (gameId === "ei" && state.activeRhymeTopic) {
+    playAudioSequence(
+      [instructionAudio.rhymeBase, state.activeRhymeTopic.centerAudio],
+      () => speakText(`Zoek woorden die rijmen op ${state.activeRhymeTopic.centerLabel}.`)
+    );
+    return;
+  }
 
-    const utterance = new SpeechSynthesisUtterance(instructionText[gameId] || "");
-    utterance.lang = "nl-BE";
-    utterance.rate = 0.92;
-    utterance.pitch = 1.02;
-    utterance.onend = () => {
-      if (state.activeSpeech === utterance) {
-        state.activeSpeech = null;
-      }
-    };
-    utterance.onerror = () => {
-      if (state.activeSpeech === utterance) {
-        state.activeSpeech = null;
-      }
-    };
-    state.activeSpeech = utterance;
-    window.speechSynthesis.speak(utterance);
+  playAudioClip(instructionAudio[gameId], () => {
+    speakText(instructionText[gameId] || "");
   });
 }
 
@@ -276,9 +474,11 @@ function createImageMarkup(item, className = "") {
   wrapper.className = className;
 
   const image = document.createElement("img");
-  image.src = item.image;
   image.alt = item.label;
   image.loading = "eager";
+  setImageSourceWithFallback(image, item.imageCandidates || [item.image], () => {
+    image.hidden = true;
+  });
   wrapper.append(image);
   return wrapper;
 }
@@ -297,30 +497,21 @@ function createPolaroidCard(item) {
 }
 
 function buildEiRoundItems() {
-  const rhymingItems = shuffle(gameItemsEi.filter((item) => item.rhymes)).slice(0, 5);
-  const nonRhymingItems = shuffle(gameItemsEi.filter((item) => !item.rhymes)).slice(0, 3);
+  const topicItems = state.activeRhymeTopic?.items || [];
+  const rhymingItems = shuffle(topicItems.filter((item) => item.rhymes)).slice(0, 5);
+  const nonRhymingItems = shuffle(topicItems.filter((item) => !item.rhymes)).slice(0, 3);
   return shuffle([...rhymingItems, ...nonRhymingItems]);
 }
 
 function buildPairItems() {
-  const selectedPairs = shuffle([...pairSets]).slice(0, 3);
+  const selectedPairs = pickPairGroups(state.pairGamePairs, PAIR_GAME_PAIR_COUNT);
   return shuffle(
-    selectedPairs.flatMap(([first, second], pairIndex) => [
-      {
-        id: `${first}-${pairIndex}`,
-        label: first,
-        image: `assets/minigames/kleur/items/${first}.png`,
-        audio: `assets/audio/words/${first}.mp3`,
-        pairKey: `${pairIndex}`,
-      },
-      {
-        id: `${second}-${pairIndex}`,
-        label: second,
-        image: `assets/minigames/kleur/items/${second}.png`,
-        audio: `assets/audio/words/${second}.mp3`,
-        pairKey: `${pairIndex}`,
-      },
-    ])
+    selectedPairs.flatMap((pairItems, pairIndex) =>
+      pairItems.slice(0, 2).map((item, itemIndex) => ({
+        ...item,
+        id: `${item.id}-pair-${pairIndex}-${itemIndex}`,
+      }))
+    )
   );
 }
 
@@ -336,6 +527,17 @@ function shuffle(items) {
 function resetEiGame() {
   clearCelebrations();
   stopActiveAudio();
+  state.activeRhymeTopic = pickRandomRhymeTopic();
+  if (!state.activeRhymeTopic) {
+    elements.correctList.innerHTML = "";
+    elements.scatterArea.innerHTML = "";
+    elements.rhymeTitle.textContent = "Geen rijmthema gevonden";
+    elements.centerImage.hidden = true;
+    elements.centerFallback.textContent = "?";
+    return;
+  }
+
+  updateRhymeTopicUi();
   state.eiItems = buildEiRoundItems().map((item, index) => ({
     ...item,
     state: "field",
@@ -668,28 +870,17 @@ function orderPair(firstItem, secondItem) {
 }
 
 function buildMemoryItems() {
-  const selectedPairs = shuffle([...pairSets]).slice(0, 3);
+  const selectedPairs = pickPairGroups(state.memoryGamePairs, MEMORY_GAME_PAIR_COUNT);
   return shuffle(
-    selectedPairs.flatMap(([first, second], pairIndex) => [
-      {
-        id: `memory-${first}-${pairIndex}`,
-        label: first,
-        image: `assets/minigames/kleur/items/${first}.png`,
-        audio: `assets/audio/words/${first}.mp3`,
+    selectedPairs.flatMap((pairItems, pairIndex) =>
+      pairItems.slice(0, 2).map((item, itemIndex) => ({
+        ...item,
+        id: `memory-${item.id}-${pairIndex}-${itemIndex}`,
         pairKey: `memory-${pairIndex}`,
         revealed: false,
         matched: false,
-      },
-      {
-        id: `memory-${second}-${pairIndex}`,
-        label: second,
-        image: `assets/minigames/kleur/items/${second}.png`,
-        audio: `assets/audio/words/${second}.mp3`,
-        pairKey: `memory-${pairIndex}`,
-        revealed: false,
-        matched: false,
-      },
-    ])
+      }))
+    )
   );
 }
 
@@ -912,7 +1103,10 @@ function setupNavigation() {
     });
   });
 
-  elements.resetEiButton.addEventListener("click", resetEiGame);
+  elements.resetEiButton.addEventListener("click", () => {
+    resetEiGame();
+    playInstruction("ei");
+  });
   elements.resetKleurButton.addEventListener("click", resetPairGame);
   elements.resetVormButton.addEventListener("click", resetMemoryGame);
 }
@@ -956,17 +1150,14 @@ function setupResponsiveRelayout() {
 }
 
 function init() {
+  loadRhymeTopics();
+  loadRhymePairs();
   registerServiceWorker();
   setupAudioUnlock();
   attachUiSounds();
   setupNavigation();
   setupFullscreenToggle();
   setupResponsiveRelayout();
-
-  const eggImage = document.querySelector("#egg-image");
-  eggImage.addEventListener("error", () => {
-    eggImage.hidden = true;
-  });
 }
 
 init();

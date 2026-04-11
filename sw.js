@@ -1,4 +1,4 @@
-const CACHE_NAME = "speelplein-v3";
+const CACHE_NAME = "speelplein-v7";
 const APP_ASSETS = [
   "./",
   "./index.html",
@@ -6,6 +6,9 @@ const APP_ASSETS = [
   "./app.js",
   "./manifest.webmanifest",
   "./assets/icons/favicon.svg",
+  "./assets/minigames/rijm/topics/index.js",
+  "./assets/minigames/kleur/pairs/index.js",
+  "./assets/minigames/vorm/pairs/index.js",
 ];
 
 self.addEventListener("install", (event) => {

@@ -1,17 +1,7 @@
-Plaats hier de afbeeldingen voor het rijmspel "ei".
+De actieve rijmthema's staan nu in:
+- ../rijm/topics/
 
-Verwachte structuur:
-- center/ei.png
-- items/aardbei.png
-- items/batterij.png
-- items/bij.png
-- items/blij.png
-- items/nest.png
-- items/potlood.png
-- items/prei.png
-- items/schaap.png
-- items/schilderij.png
-- items/vlinder.png
-- items/kledij.png
+Zie ook:
+- ../rijm/README.txt
 
-Als een afbeelding ontbreekt, toont de app tijdelijk een tekstvakje.
+Deze map bevat alleen de oude bronbestanden die eerder voor het ei-spel gebruikt werden.
