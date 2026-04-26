@@ -23,6 +23,20 @@ window.RHYME_PAIR_DATA = {
     "schoen - zoen",
     "zoen - schoen",
     "kuiken - ruiken",
-    "ruiken - kuiken"
+    "ruiken - kuiken",
+    "brug - mug",
+    "mug - brug",
+    "hommel - schommel",
+    "schommel - hommel",
+    "mier - vier",
+    "vier - mier",
+    "mug - brug",
+    "brug - mug",
+    "slak - zak",
+    "zak - slak",
+    "vlieg - wieg",
+    "wieg - vlieg",
+    "worm - vorm",
+    "vorm - worm"
   ],
 };
