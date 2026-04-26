@@ -1,4 +1,4 @@
-const CACHE_NAME = "speelplein-v9";
+const CACHE_NAME = "speelplein-v10";
 const APP_ASSETS = [
   "./",
   "./index.html",
